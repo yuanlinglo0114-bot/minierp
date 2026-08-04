@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯員工' if employee else '新增員工' }} - MiniERP{% endblock %}
+{% block page_title %}{{ '編輯員工' if employee else '新增員工' }}{% endblock %}
+{% block content %}
+<form class="form-panel" method="post">
+  {% if employee %}
+  <div class="field">
+    <label>員工代號</label>
+    <input type="text" value="{{ employee.EmployeeId }}" disabled>
+  </div>
+  {% endif %}
+  <div class="field">
+    <label>姓名</label>
+    <input type="text" name="employee_name" required
+      value="{{ form.employee_name if form else (employee.EmployeeName if employee else '') }}">
+  </div>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" name="email"
+      value="{{ form.email if form else (employee.Email if employee else '') }}">
+  </div>
+  <button class="btn" type="submit">儲存</button>
+  <a class="btn btn-secondary" href="{{ url_for('employee.list_view') }}">取消</a>
+</form>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}物料明細 - MiniERP{% endblock %}
+{% block page_title %}物料明細：{{ product.ProductId }} - {{ product.ProductName }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('product.edit_view', product_id=product.ProductId) }}">編輯</a>
+  <form method="post" action="{{ url_for('product.delete_view', product_id=product.ProductId) }}"
+        onsubmit="return confirm('確定要刪除此物料嗎？');" style="display:inline;">
+    <button class="btn btn-danger" type="submit"
+      {% if details %}disabled title="已有入出明細，無法刪除"{% endif %}>刪除</button>
+  </form>
+  <a class="btn btn-secondary" href="{{ url_for('product.list_view') }}">返回列表</a>
+</div>
+
+<table>
+  <tr><th>物料代號</th><td>{{ product.ProductId }}</td></tr>
+  <tr><th>物料名稱</th><td>{{ product.ProductName }}</td></tr>
+  <tr><th>庫存量</th><td>{{ product.StockBalance }}</td></tr>
+</table>
+
+<div class="detail-section">
+  <h2>入出明細（僅供查看）</h2>
+  {% if details %}
+  <table>
+    <thead><tr><th>類型</th><th>單據編號</th><th>行號</th><th>數量</th></tr></thead>
+    <tbody>
+      {% for d in details %}
+      <tr>
+        <td>{{ '入庫' if d.DocType == 'Inbound' else '出庫' }}</td>
+        <td>{{ d.DocId }}</td>
+        <td>{{ d.LineNum }}</td>
+        <td>{{ d.Quantity }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">無入出明細紀錄</div>
+  {% endif %}
+</div>
+{% endblock %}

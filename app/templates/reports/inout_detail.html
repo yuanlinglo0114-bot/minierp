@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}入出明細 - MiniERP{% endblock %}
+{% block page_title %}入出明細查詢{% endblock %}
+{% block content %}
+<form class="filter-panel" method="get">
+  <div class="field">
+    <label>物料代號</label>
+    <input type="text" name="product_id" value="{{ product_id }}" placeholder="例如 P001">
+  </div>
+  <div class="field">
+    <label>單據編號 (模糊)</label>
+    <input type="text" name="doc_id" value="{{ doc_id }}" placeholder="例如 IN20260601">
+  </div>
+  <div class="field">
+    <label>類型</label>
+    <select name="doc_type">
+      <option value="">全部</option>
+      <option value="Inbound" {{ 'selected' if doc_type == 'Inbound' else '' }}>入庫</option>
+      <option value="Outbound" {{ 'selected' if doc_type == 'Outbound' else '' }}>出庫</option>
+    </select>
+  </div>
+  <div class="field">
+    <button class="btn" type="submit">查詢</button>
+  </div>
+  <div class="field">
+    <a class="btn btn-secondary" href="{{ url_for('reports.inout_detail_export', product_id=product_id, doc_type=doc_type, doc_id=doc_id) }}">匯出 Excel</a>
+  </div>
+</form>
+
+{% if rows %}
+<table>
+  <thead><tr><th>類型</th><th>單據編號</th><th>行號</th><th>物料代號</th><th>物料名稱</th><th>數量</th></tr></thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ '入庫' if r.DocType == 'Inbound' else '出庫' }}</td>
+      <td>{{ r.DocId }}</td>
+      <td>{{ r.LineNum }}</td>
+      <td>{{ r.ProductId }}</td>
+      <td>{{ r.ProductName }}</td>
+      <td>{{ r.Quantity }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">查無資料</div>
+{% endif %}
+{% endblock %}

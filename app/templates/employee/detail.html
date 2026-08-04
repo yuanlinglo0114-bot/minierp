@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}員工明細 - MiniERP{% endblock %}
+{% block page_title %}員工明細：{{ employee.EmployeeId }} - {{ employee.EmployeeName }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('employee.edit_view', employee_id=employee.EmployeeId) }}">編輯</a>
+  <form method="post" action="{{ url_for('employee.delete_view', employee_id=employee.EmployeeId) }}"
+        onsubmit="return confirm('確定要刪除此員工嗎？');" style="display:inline;">
+    <button class="btn btn-danger" type="submit"
+      {% if details %}disabled title="已有入出單據，無法刪除"{% endif %}>刪除</button>
+  </form>
+  <a class="btn btn-secondary" href="{{ url_for('employee.list_view') }}">返回列表</a>
+</div>
+
+<table>
+  <tr><th>員工代號</th><td>{{ employee.EmployeeId }}</td></tr>
+  <tr><th>姓名</th><td>{{ employee.EmployeeName }}</td></tr>
+  <tr><th>Email</th><td>{{ employee.Email or '' }}</td></tr>
+</table>
+
+<div class="detail-section">
+  <h2>經手單據（僅供查看）</h2>
+  {% if details %}
+  <table>
+    <thead><tr><th>類型</th><th>單據編號</th><th>日期</th></tr></thead>
+    <tbody>
+      {% for d in details %}
+      <tr>
+        <td>{{ '入庫' if d.DocType == 'Inbound' else '出庫' }}</td>
+        <td>{{ d.DocId }}</td>
+        <td>{{ d.DocDate }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">無經手單據紀錄</div>
+  {% endif %}
+</div>
+{% endblock %}

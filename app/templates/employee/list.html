@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}員工管理 - MiniERP{% endblock %}
+{% block page_title %}員工管理{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('employee.new_view') }}">+ 新增員工</a>
+</div>
+{% if employees %}
+<table>
+  <thead>
+    <tr><th>員工代號</th><th>姓名</th><th>Email</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    {% for e in employees %}
+    <tr>
+      <td>{{ e.EmployeeId }}</td>
+      <td>{{ e.EmployeeName }}</td>
+      <td>{{ e.Email or '' }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('employee.detail_view', employee_id=e.EmployeeId) }}">檢視</a>
+        <a class="btn btn-sm" href="{{ url_for('employee.edit_view', employee_id=e.EmployeeId) }}">編輯</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">尚無員工資料</div>
+{% endif %}
+{% endblock %}

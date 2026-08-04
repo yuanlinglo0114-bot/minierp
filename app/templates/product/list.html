@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}物料管理 - MiniERP{% endblock %}
+{% block page_title %}物料管理{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('product.new_view') }}">+ 新增物料</a>
+</div>
+{% if products %}
+<table>
+  <thead>
+    <tr><th>物料代號</th><th>物料名稱</th><th>庫存量</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    {% for p in products %}
+    <tr>
+      <td>{{ p.ProductId }}</td>
+      <td>{{ p.ProductName }}</td>
+      <td>{{ p.StockBalance }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('product.detail_view', product_id=p.ProductId) }}">檢視</a>
+        <a class="btn btn-sm" href="{{ url_for('product.edit_view', product_id=p.ProductId) }}">編輯</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">尚無物料資料</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}MiniERP{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><a href="{{ url_for('main.index') }}">MiniERP</a></div>
+
+      <details class="menu-group" open>
+        <summary>主數據</summary>
+        <a class="menu-item {{ 'active' if request.path.startswith('/product') }}" href="{{ url_for('product.list_view') }}">物料管理</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/employee') }}" href="{{ url_for('employee.list_view') }}">員工管理</a>
+      </details>
+
+      <details class="menu-group" open>
+        <summary>交易數據</summary>
+        <a class="menu-item {{ 'active' if request.path.startswith('/inbound') }}" href="{{ url_for('inbound.list_view') }}">入庫管理</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/outbound') }}" href="{{ url_for('outbound.list_view') }}">出庫管理</a>
+      </details>
+
+      <details class="menu-group" open>
+        <summary>報表查詢</summary>
+        <a class="menu-item {{ 'active' if request.path.startswith('/reports/inout-header') }}" href="{{ url_for('reports.inout_header') }}">入出單據</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/reports/inout-detail') }}" href="{{ url_for('reports.inout_detail') }}">入出明細</a>
+      </details>
+    </aside>
+
+    <main class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-list">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

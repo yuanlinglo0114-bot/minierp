@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}入庫管理 - MiniERP{% endblock %}
+{% block page_title %}入庫管理{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('inbound.new_view') }}">+ 新增入庫單</a>
+</div>
+{% if headers %}
+<table>
+  <thead><tr><th>入庫單號</th><th>日期</th><th>經手員工</th><th>操作</th></tr></thead>
+  <tbody>
+    {% for h in headers %}
+    <tr>
+      <td>{{ h.InboundId }}</td>
+      <td>{{ h.InboundDate }}</td>
+      <td>{{ h.EmployeeId }} - {{ h.EmployeeName }}</td>
+      <td class="actions">
+        <a class="btn btn-sm" href="{{ url_for('inbound.edit_view', inbound_id=h.InboundId) }}">編輯</a>
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('inbound.export_view', inbound_id=h.InboundId) }}">匯出 Excel</a>
+        <form method="post" action="{{ url_for('inbound.delete_view', inbound_id=h.InboundId) }}"
+              onsubmit="return confirm('確定要刪除此入庫單嗎？');" style="display:inline;">
+          <button class="btn btn-sm btn-danger" type="submit">刪除</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">尚無入庫單資料</div>
+{% endif %}
+{% endblock %}

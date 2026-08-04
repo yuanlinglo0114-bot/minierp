@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}入出單據 - MiniERP{% endblock %}
+{% block page_title %}入出單據查詢{% endblock %}
+{% block content %}
+<form class="filter-panel" method="get">
+  <div class="field">
+    <label>日期起</label>
+    <input type="date" name="date_from" value="{{ date_from }}">
+  </div>
+  <div class="field">
+    <label>日期迄</label>
+    <input type="date" name="date_to" value="{{ date_to }}">
+  </div>
+  <div class="field">
+    <label>經手員工</label>
+    <select name="employee_id">
+      <option value="">全部</option>
+      {% for e in employees %}
+      <option value="{{ e.EmployeeId }}" {{ 'selected' if e.EmployeeId == employee_id else '' }}>{{ e.EmployeeId }} - {{ e.EmployeeName }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>類型</label>
+    <select name="doc_type">
+      <option value="">全部</option>
+      <option value="Inbound" {{ 'selected' if doc_type == 'Inbound' else '' }}>入庫</option>
+      <option value="Outbound" {{ 'selected' if doc_type == 'Outbound' else '' }}>出庫</option>
+    </select>
+  </div>
+  <div class="field">
+    <button class="btn" type="submit">查詢</button>
+  </div>
+  <div class="field">
+    <a class="btn btn-secondary" href="{{ url_for('reports.inout_header_export', date_from=date_from, date_to=date_to, employee_id=employee_id, doc_type=doc_type) }}">匯出 Excel</a>
+  </div>
+</form>
+
+{% if rows %}
+<table>
+  <thead><tr><th>類型</th><th>單據編號</th><th>日期</th><th>經手員工</th></tr></thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ '入庫' if r.DocType == 'Inbound' else '出庫' }}</td>
+      <td>{{ r.DocId }}</td>
+      <td>{{ r.DocDate }}</td>
+      <td>{{ r.EmployeeId }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">查無資料</div>
+{% endif %}
+{% endblock %}
