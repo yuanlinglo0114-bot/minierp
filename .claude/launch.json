@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "minierp",
-      "runtimeExecutable": "/Users/ling/Desktop/project/venv/bin/python",
-      "runtimeArgs": ["run.py"],
+      "runtimeExecutable": "/Users/ling/Desktop/project/webapp/venv/bin/python",
+      "runtimeArgs": ["/Users/ling/Desktop/project/webapp/run.py"],
       "port": 5050
     }
   ]
