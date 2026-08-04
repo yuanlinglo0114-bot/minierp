@@ -35,6 +35,8 @@
         <a class="menu-item {{ 'active' if request.path.startswith('/reports/inout-detail') }}" href="{{ url_for('reports.inout_detail') }}">入出明細</a>
         <a class="menu-item {{ 'active' if request.path.startswith('/reports/inventory-closing') }}" href="{{ url_for('reports.inventory_closing') }}">日結餘額表</a>
       </details>
+
+      <a class="menu-item" style="margin-top:16px;" href="{{ url_for('auth.logout') }}">登出</a>
     </aside>
 
     <main class="content">
