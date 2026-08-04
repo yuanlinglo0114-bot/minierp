@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}日結餘額表 - MiniERP{% endblock %}
+{% block page_title %}日結餘額表{% endblock %}
+{% block content %}
+<form class="filter-panel" method="get">
+  <div class="field">
+    <label>物料</label>
+    <select name="product_id">
+      <option value="">全部</option>
+      {% for p in products %}
+      <option value="{{ p.ProductId }}" {{ 'selected' if p.ProductId == product_id else '' }}>{{ p.ProductId }} - {{ p.ProductName }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>日期起</label>
+    <input type="date" name="date_from" value="{{ date_from }}">
+  </div>
+  <div class="field">
+    <label>日期迄</label>
+    <input type="date" name="date_to" value="{{ date_to }}">
+  </div>
+  <div class="field">
+    <button class="btn" type="submit">查詢</button>
+  </div>
+  <div class="field">
+    <a class="btn btn-secondary" href="{{ url_for('reports.inventory_closing_export', product_id=product_id, date_from=date_from, date_to=date_to) }}">匯出 Excel</a>
+  </div>
+</form>
+
+{% if rows %}
+<table>
+  <thead>
+    <tr>
+      <th>日期</th><th>物料代號</th><th>物料名稱</th>
+      <th>期初庫存</th><th>入庫量</th><th>出庫量</th><th>期末庫存</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.ClosingDate }}</td>
+      <td>{{ r.ProductId }}</td>
+      <td>{{ r.ProductName }}</td>
+      <td>{{ r.OpeningQuantity }}</td>
+      <td>{{ r.InboundQuantity }}</td>
+      <td>{{ r.OutboundQuantity }}</td>
+      <td>{{ r.ClosingQuantity }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">查無資料</div>
+{% endif %}
+{% endblock %}

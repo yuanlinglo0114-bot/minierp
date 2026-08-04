@@ -27,6 +27,7 @@
         <summary>報表查詢</summary>
         <a class="menu-item {{ 'active' if request.path.startswith('/reports/inout-header') }}" href="{{ url_for('reports.inout_header') }}">入出單據</a>
         <a class="menu-item {{ 'active' if request.path.startswith('/reports/inout-detail') }}" href="{{ url_for('reports.inout_detail') }}">入出明細</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/reports/inventory-closing') }}" href="{{ url_for('reports.inventory_closing') }}">日結餘額表</a>
       </details>
     </aside>
 

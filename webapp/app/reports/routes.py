@@ -2,6 +2,7 @@ from flask import render_template, request, send_file
 
 from app import excel_export
 from app.employee import repository as employee_repo
+from app.product import repository as product_repo
 from app.reports import bp
 from app.reports import repository as repo
 
@@ -80,5 +81,45 @@ def inout_detail_export():
         buf,
         as_attachment=True,
         download_name="inout_detail_report.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@bp.route("/inventory-closing")
+def inventory_closing():
+    product_id = request.args.get("product_id", "")
+    date_from = request.args.get("date_from", "")
+    date_to = request.args.get("date_to", "")
+    rows = repo.query_inventory_daily_closing(product_id or None, date_from or None, date_to or None)
+    return render_template(
+        "reports/inventory_closing.html",
+        rows=rows,
+        products=product_repo.list_products(),
+        product_id=product_id,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+
+@bp.route("/inventory-closing/export")
+def inventory_closing_export():
+    product_id = request.args.get("product_id", "")
+    date_from = request.args.get("date_from", "")
+    date_to = request.args.get("date_to", "")
+    rows = repo.query_inventory_daily_closing(product_id or None, date_from or None, date_to or None)
+    columns = [
+        ("日期", "ClosingDate"),
+        ("物料代號", "ProductId"),
+        ("物料名稱", "ProductName"),
+        ("期初庫存", "OpeningQuantity"),
+        ("入庫量", "InboundQuantity"),
+        ("出庫量", "OutboundQuantity"),
+        ("期末庫存", "ClosingQuantity"),
+    ]
+    buf = excel_export.export_table("日結餘額表", columns, rows)
+    return send_file(
+        buf,
+        as_attachment=True,
+        download_name="inventory_daily_closing_report.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )

@@ -53,6 +53,25 @@ Same shape as above, plus:
 - Add an `export_view` route using `excel_export.export_document(...)` for
   the per-document voucher-style download.
 
+## Maintaining a derived/aggregate table on transaction writes
+
+`InventoryDailyClosing` is the existing example: a table that summarizes
+Inbound/Outbound activity per product per day, kept in sync by
+`app/inventory_closing.py`'s `recompute_for_product(cur, product_id)`,
+called from every `create_*`/`update_*`/`delete_*` in
+`app/inbound/repository.py` / `app/outbound/repository.py`, inside the same
+`db.transaction()` cursor, for every product the write touched.
+
+If you need another derived table like this, **rebuild the affected keys
+from the source transaction tables rather than incrementally patching**.
+Documents get entered out of date order routinely in this app (a user
+backdates a transaction after later ones already exist) — any design where
+a later row's value depends on the row before it (running balances, running
+totals) breaks under out-of-order entry unless you either recompute the
+whole chain from scratch or write real backward-cascade logic. The rebuild
+is simpler, is correct regardless of entry order, and is cheap at this
+table's scale — don't reach for incremental patching to save a few queries.
+
 ## Add a new report
 
 Reports query a view directly with optional filters built as a growing SQL
@@ -97,7 +116,10 @@ would be needed for one). Smoke-test manually:
 3. If you touched Inbound/Outbound, verify `Product.StockBalance` moves by
    exactly the transacted quantity and reverses correctly on edit/delete —
    query the DB directly (`pymssql`) before/after to confirm, don't just
-   trust the UI.
+   trust the UI. Also check `InventoryDailyClosing` for the affected
+   product(s): specifically test a backdated entry (a date earlier than
+   that product's existing rows) and confirm every later row's
+   Opening/ClosingQuantity shifted correctly, not just the new row.
 4. Clean up any test rows you created (delete via the UI/API) so the shared
    dev database isn't left with junk data — this DB has real seeded demo
    data other people may be relying on.

@@ -67,6 +67,7 @@ delete protection, is enforced entirely in the app layer):
 | `InboundDetail` | InboundId+LineNum (PK), ProductId, ProductName, Quantity | ProductName denormalized at write time |
 | `OutboundHeader` | OutboundId (PK, `OUTyyyymmdd###`), OutboundDate, EmployeeId | |
 | `OutboundDetail` | OutboundId+LineNum (PK), ProductId, ProductName, Quantity | |
+| `InventoryDailyClosing` | ClosingDate+ProductId (PK), OpeningQuantity, InboundQuantity, OutboundQuantity, ClosingQuantity | Sparse: one row per (product, date) that actually had inbound/outbound activity — see maintenance rule below |
 
 Two views, created by [sql/001_create_views.sql](sql/001_create_views.sql)
 (they did not exist in the source DB — this migration must run once against
@@ -100,8 +101,28 @@ will work — routes query these views directly.
   `v_inoutdetail` row references its ProductId; an Employee can't be deleted
   while any `v_inoutheader` row references its EmployeeId. Enforced in
   `routes.py` (`has_details()` check), not by the DB.
-- **`InventoryDailyClosing`** exists in the DB but is out of scope for this
-  app — not part of the requested menu, left untouched.
+- **`InventoryDailyClosing` is rebuilt from scratch per affected product on
+  every inbound/outbound write**, not incrementally patched. See
+  [app/inventory_closing.py](app/inventory_closing.py):
+  `recompute_for_product(cur, product_id)` deletes all existing rows for that
+  product and regenerates them in date order straight from
+  `InboundDetail`/`OutboundDetail` (joined to their headers for the date),
+  threading `OpeningQuantity`/`ClosingQuantity` forward as it goes. It's
+  called — with the same cursor, inside the same `db.transaction()` — from
+  every `create_*`/`update_*`/`delete_*` in `app/inbound/repository.py` and
+  `app/outbound/repository.py`, for every product touched by that write
+  (union of old and new product IDs on an edit).
+
+  This exists specifically because **documents are routinely entered out of
+  date order** (a user backdates an inbound after later-dated ones already
+  exist). An incremental "append/patch the latest row" approach breaks the
+  moment a backdated entry lands before the current latest date, since every
+  later row's `OpeningQuantity` depends on the row before it. A full rebuild
+  from the transaction tables sidesteps that entirely — it's always correct
+  regardless of entry order, and cheap at this table's scale. Verified
+  end-to-end: inserting a transaction dated before a product's earliest
+  existing closing row correctly shifts every later row's opening/closing
+  balance, and deleting it restores the prior state exactly.
 
 ## Menu structure
 
@@ -109,7 +130,8 @@ Two levels, defined in [app/templates/base.html](app/templates/base.html):
 
 - 主數據: 物料管理 (`/product`) · 員工管理 (`/employee`)
 - 交易數據: 入庫管理 (`/inbound`) · 出庫管理 (`/outbound`)
-- 報表查詢: 入出單據 (`/reports/inout-header`) · 入出明細 (`/reports/inout-detail`)
+- 報表查詢: 入出單據 (`/reports/inout-header`) · 入出明細 (`/reports/inout-detail`) ·
+  日結餘額表 (`/reports/inventory-closing`)
 
 ## Known gaps / explicitly out of scope
 

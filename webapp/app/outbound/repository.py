@@ -1,5 +1,6 @@
 from app import db
 from app.id_gen import next_id_for_date
+from app.inventory_closing import recompute_for_product
 
 
 def list_headers():
@@ -53,6 +54,8 @@ def create_outbound(outbound_date, employee_id, lines):
                 "UPDATE Product SET StockBalance = StockBalance - %s WHERE ProductId = %s",
                 (quantity, product_id),
             )
+        for product_id in {p for p, _ in lines}:
+            recompute_for_product(cur, product_id)
     return outbound_id
 
 
@@ -62,7 +65,8 @@ def update_outbound(outbound_id, outbound_date, employee_id, lines):
             "SELECT ProductId, Quantity FROM OutboundDetail WHERE OutboundId = %s",
             (outbound_id,),
         )
-        for old in cur.fetchall():
+        old_lines = cur.fetchall()
+        for old in old_lines:
             cur.execute(
                 "UPDATE Product SET StockBalance = StockBalance + %s WHERE ProductId = %s",
                 (old["Quantity"], old["ProductId"]),
@@ -84,6 +88,9 @@ def update_outbound(outbound_id, outbound_date, employee_id, lines):
                 "UPDATE Product SET StockBalance = StockBalance - %s WHERE ProductId = %s",
                 (quantity, product_id),
             )
+        affected_product_ids = {o["ProductId"] for o in old_lines} | {p for p, _ in lines}
+        for product_id in affected_product_ids:
+            recompute_for_product(cur, product_id)
 
 
 def delete_outbound(outbound_id):
@@ -92,10 +99,13 @@ def delete_outbound(outbound_id):
             "SELECT ProductId, Quantity FROM OutboundDetail WHERE OutboundId = %s",
             (outbound_id,),
         )
-        for old in cur.fetchall():
+        old_lines = cur.fetchall()
+        for old in old_lines:
             cur.execute(
                 "UPDATE Product SET StockBalance = StockBalance + %s WHERE ProductId = %s",
                 (old["Quantity"], old["ProductId"]),
             )
         cur.execute("DELETE FROM OutboundDetail WHERE OutboundId = %s", (outbound_id,))
         cur.execute("DELETE FROM OutboundHeader WHERE OutboundId = %s", (outbound_id,))
+        for product_id in {o["ProductId"] for o in old_lines}:
+            recompute_for_product(cur, product_id)
