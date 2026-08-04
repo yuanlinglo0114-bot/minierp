@@ -1,0 +1,654 @@
+<meta charset="utf-8">
+<title>biz00 E-R Diagram</title>
+<style>
+  :root {
+    --bg: #eef1f5;
+    --surface: #ffffff;
+    --surface-2: #f4f6f9;
+    --ink: #17212b;
+    --muted: #56677a;
+    --line: #d6dee6;
+    --line-strong: #aab8c6;
+
+    --employee: #3b5b8c;    --employee-tint: #e8eef7;
+    --product: #16786a;     --product-tint: #e4f3f0;
+    --inbound: #2f8f4e;     --inbound-tint: #e8f5eb;
+    --outbound: #b5751a;    --outbound-tint: #f9f0df;
+    --closing: #5b6472;     --closing-tint: #eceef1;
+    --pill-bg: rgba(255,255,255,0.6);
+
+    --radius: 6px;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11161c;
+      --surface: #1a2129;
+      --surface-2: #202932;
+      --ink: #e8edf2;
+      --muted: #94a3b3;
+      --line: #2b3541;
+      --line-strong: #3c4a59;
+
+      --employee: #7ea3dd;    --employee-tint: #1e2a3d;
+      --product: #57c4b0;     --product-tint: #14302c;
+      --inbound: #6bc98a;     --inbound-tint: #16301f;
+      --outbound: #e0a752;    --outbound-tint: #332510;
+      --closing: #9aa7b5;     --closing-tint: #262c33;
+      --pill-bg: rgba(0,0,0,0.32);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11161c; --surface: #1a2129; --surface-2: #202932; --ink: #e8edf2; --muted: #94a3b3;
+    --line: #2b3541; --line-strong: #3c4a59;
+    --employee: #7ea3dd; --employee-tint: #1e2a3d;
+    --product: #57c4b0; --product-tint: #14302c;
+    --inbound: #6bc98a; --inbound-tint: #16301f;
+    --outbound: #e0a752; --outbound-tint: #332510;
+    --closing: #9aa7b5; --closing-tint: #262c33;
+    --pill-bg: rgba(0,0,0,0.32);
+  }
+  :root[data-theme="light"] {
+    --bg: #eef1f5; --surface: #ffffff; --surface-2: #f4f6f9; --ink: #17212b; --muted: #56677a;
+    --line: #d6dee6; --line-strong: #aab8c6;
+    --employee: #3b5b8c; --employee-tint: #e8eef7;
+    --product: #16786a; --product-tint: #e4f3f0;
+    --inbound: #2f8f4e; --inbound-tint: #e8f5eb;
+    --outbound: #b5751a; --outbound-tint: #f9f0df;
+    --closing: #5b6472; --closing-tint: #eceef1;
+    --pill-bg: rgba(255,255,255,0.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+  }
+  .page {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 40px 28px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  /* ---------- header ---------- */
+  header.top {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .eyebrow {
+    font: 600 11px/1 var(--sans);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(24px, 3.4vw, 34px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  h1 .arrow { color: var(--muted); font-weight: 400; margin: 0 10px; }
+  .lede {
+    max-width: 66ch;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .stat {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+  }
+  .stat b { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12px; color: var(--muted); }
+
+  /* ---------- section headings ---------- */
+  section h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 16px;
+  }
+
+  /* ---------- diagram ---------- */
+  .diagram-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background:
+      linear-gradient(var(--surface-2) 1px, transparent 1px) 0 0 / 100% 28px,
+      linear-gradient(90deg, var(--surface-2) 1px, transparent 1px) 0 0 / 28px 100%,
+      var(--surface);
+  }
+  #diagram {
+    position: relative;
+    margin: 0 auto;
+  }
+  svg#connectors { position: absolute; top: 0; left: 0; overflow: visible; }
+  .card {
+    position: absolute;
+    width: 320px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(20, 30, 40, 0.06);
+    overflow: hidden;
+  }
+  .card .head {
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .card .head .name { font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
+  .card .head .role {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--pill-bg);
+    white-space: nowrap;
+  }
+  .card.role-employee .head { background: var(--employee-tint); }
+  .card.role-product .head  { background: var(--product-tint); }
+  .card.role-inbound .head  { background: var(--inbound-tint); }
+  .card.role-outbound .head { background: var(--outbound-tint); }
+  .card.role-closing .head  { background: var(--closing-tint); }
+  .card.role-employee .role { color: var(--employee); }
+  .card.role-product .role  { color: var(--product); }
+  .card.role-inbound .role  { color: var(--inbound); }
+  .card.role-outbound .role { color: var(--outbound); }
+  .card.role-closing .role  { color: var(--closing); }
+
+  .card table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11.5px; }
+  .card td { padding: 4px 10px; white-space: nowrap; }
+  .card tr + tr td { border-top: 1px dashed var(--line); }
+  .card .col-flag {
+    width: 30px;
+    font-weight: 700;
+    font-size: 9.5px;
+    letter-spacing: 0.03em;
+  }
+  .card .col-flag.pk { color: var(--ink); }
+  .card .col-flag.fk { color: var(--muted); font-weight: 600; }
+  .card .col-name.is-pk { font-weight: 700; }
+  .card .col-type { color: var(--muted); text-align: right; }
+  .card .col-name { padding-right: 6px; }
+
+  .conn-line { fill: none; stroke: var(--ink); stroke-width: 1.6; opacity: 0.55; }
+  .conn-line.nonidentifying { opacity: 0.4; stroke-dasharray: 5 4; }
+  marker path { stroke: var(--ink); opacity: 0.6; fill: none; stroke-width: 1.4; }
+
+  /* ---------- legend ---------- */
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 24px;
+  }
+  .legend-group { display: flex; flex-direction: column; gap: 10px; }
+  .legend-group h3 {
+    margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--muted);
+  }
+  .legend-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .legend-row svg { flex: none; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+  /* ---------- scripts ---------- */
+  .scripts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 860px) { .scripts-grid { grid-template-columns: 1fr; } }
+  .script-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .script-card .bar {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--surface-2);
+  }
+  .script-card .bar .fname { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+  .script-card .bar .fdesc { font-size: 11.5px; color: var(--muted); }
+  .script-card .status {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px; white-space: nowrap;
+  }
+  .status.ok { background: var(--inbound-tint); color: var(--inbound); }
+  .status.info { background: var(--closing-tint); color: var(--closing); }
+  .script-card pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+  .script-card code { color: var(--ink); }
+  .sql-kw { color: var(--employee); font-weight: 600; }
+  .sql-com { color: var(--muted); font-style: italic; }
+
+  footer {
+    color: var(--muted);
+    font-size: 12px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+</style>
+
+<div class="page">
+
+  <header class="top">
+    <div class="eyebrow">SQL Server 2022 &middot; biz00</div>
+    <h1>biz00 <span class="arrow">&rarr;</span> lalala</h1>
+    <p class="lede">
+      A full copy of <code>biz00</code>'s 7 tables and all rows was cloned into a new database,
+      <code>lalala</code>, with every <strong>foreign key stripped</strong>. The diagram below is
+      the complete logical E-R model, reconstructed by reading each table's columns, primary keys,
+      and naming conventions &mdash; then cross-checked against the relationships <code>biz00</code>
+      already enforces.
+    </p>
+    <div class="stats">
+      <div class="stat"><b>7</b><span>tables</span></div>
+      <div class="stat"><b>7</b><span>relationships found</span></div>
+      <div class="stat"><b>0</b><span>missing FKs in biz00</span></div>
+      <div class="stat"><b>7</b><span>FK scripts generated for lalala</span></div>
+      <div class="stat"><b>163</b><span>rows copied</span></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>Entity-Relationship Diagram</h2>
+    <div class="diagram-scroll">
+      <div id="diagram">
+        <svg id="connectors" width="0" height="0">
+          <defs>
+            <marker id="mkOne" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M4,0 L4,12 M8,0 L8,12"/>
+            </marker>
+            <marker id="mkMany" markerWidth="14" markerHeight="14" refX="12" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M12,6 L0,0 M12,6 L0,12 M12,6 L0,6"/>
+            </marker>
+          </defs>
+        </svg>
+        <!-- CARDS_PLACEHOLDER -->
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Notation</h2>
+    <div class="legend">
+      <div class="legend-group">
+        <h3>Line style</h3>
+        <div class="legend-row"><svg width="40" height="10"><line x1="0" y1="5" x2="40" y2="5" stroke="var(--ink)" stroke-width="1.6" opacity="0.55"/></svg> Identifying &mdash; child's PK includes the parent's key</div>
+        <div class="legend-row"><svg width="40" height="10"><line x1="0" y1="5" x2="40" y2="5" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="5 4" opacity="0.4"/></svg> Non-identifying &mdash; plain FK reference</div>
+      </div>
+      <div class="legend-group">
+        <h3>Cardinality</h3>
+        <div class="legend-row"><svg width="20" height="14" viewBox="0 0 12 12"><path d="M4,0 L4,12 M8,0 L8,12" stroke="var(--ink)" stroke-width="1.4" opacity="0.6"/></svg> Exactly one (mandatory)</div>
+        <div class="legend-row"><svg width="20" height="14" viewBox="0 0 12 12"><path d="M12,6 L0,0 M12,6 L0,12 M12,6 L0,6" stroke="var(--ink)" stroke-width="1.4" opacity="0.6" fill="none"/></svg> Zero or many</div>
+      </div>
+      <div class="legend-group">
+        <h3>Entity role</h3>
+        <div class="legend-row"><span class="swatch" style="background:var(--employee)"></span> Employee &mdash; staff master</div>
+        <div class="legend-row"><span class="swatch" style="background:var(--product)"></span> Product &mdash; catalog master</div>
+        <div class="legend-row"><span class="swatch" style="background:var(--inbound)"></span> Inbound flow (receiving)</div>
+        <div class="legend-row"><span class="swatch" style="background:var(--outbound)"></span> Outbound flow (shipping)</div>
+        <div class="legend-row"><span class="swatch" style="background:var(--closing)"></span> Daily inventory snapshot</div>
+      </div>
+      <div class="legend-group">
+        <h3>Column tags</h3>
+        <div class="legend-row"><span class="col-flag pk" style="font-family:var(--mono)">PK</span> Primary key column</div>
+        <div class="legend-row"><span class="col-flag fk" style="font-family:var(--mono)">FK</span> Foreign key column (logical &mdash; not enforced in lalala yet)</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Scripts</h2>
+    <div class="scripts-grid">
+      <div class="script-card">
+        <div class="bar">
+          <div>
+            <div class="fname">01_create_lalala.sql</div>
+            <div class="fdesc">Creates lalala, all 7 tables (PK/CHECK/DEFAULT kept, FK omitted), copies all rows</div>
+          </div>
+          <div class="status ok">Executed</div>
+        </div>
+        <pre><code>-- =====================================================================
+-- 01_create_lalala.sql
+-- Clone of [biz00] named [lalala], WITHOUT foreign key constraints.
+-- Keeps: PRIMARY KEY, CHECK, DEFAULT constraints, data.
+-- Purpose: practice database for adding the missing FOREIGN KEY
+--          constraints yourself (see 02_add_foreign_keys.sql for the
+--          answer key / script).
+-- =====================================================================
+
+CREATE DATABASE lalala;
+GO
+
+USE lalala;
+GO
+
+CREATE TABLE dbo.Employee (
+    EmployeeId   nvarchar(20)  NOT NULL,
+    EmployeeName nvarchar(50)  NOT NULL,
+    Email        nvarchar(255) NULL,
+    CONSTRAINT PK_Employee PRIMARY KEY (EmployeeId),
+    CONSTRAINT CK_Employee_EmployeeName_NotBlank CHECK (len(ltrim(rtrim(EmployeeName))) &gt; 0),
+    CONSTRAINT CK_Employee_Email_Format CHECK (Email IS NULL OR Email LIKE N&#x27;%_@_%._%&#x27;)
+);
+
+CREATE TABLE dbo.Product (
+    ProductId    nvarchar(20)  NOT NULL,
+    ProductName  nvarchar(100) NOT NULL,
+    StockBalance decimal(18,3) NOT NULL CONSTRAINT DF_Product_StockBalance DEFAULT (0),
+    CONSTRAINT PK_Product PRIMARY KEY (ProductId),
+    CONSTRAINT CK_Product_ProductName_NotBlank CHECK (len(ltrim(rtrim(ProductName))) &gt; 0),
+    CONSTRAINT CK_Product_StockBalance_NonNegative CHECK (StockBalance &gt;= 0)
+);
+
+CREATE TABLE dbo.InboundHeader (
+    InboundId  nvarchar(20) NOT NULL,
+    InboundDate date NOT NULL CONSTRAINT DF_InboundHeader_InboundDate DEFAULT (CONVERT(date, SYSDATETIME())),
+    EmployeeId nvarchar(20) NOT NULL,
+    CONSTRAINT PK_InboundHeader PRIMARY KEY (InboundId)
+    -- FK to Employee intentionally omitted; see 02_add_foreign_keys.sql
+);
+
+CREATE TABLE dbo.InboundDetail (
+    InboundId   nvarchar(20)  NOT NULL,
+    LineNum     smallint      NOT NULL,
+    ProductId   nvarchar(20)  NOT NULL,
+    ProductName nvarchar(100) NOT NULL,
+    Quantity    decimal(18,3) NOT NULL,
+    CONSTRAINT PK_InboundDetail PRIMARY KEY (InboundId, LineNum),
+    CONSTRAINT CK_InboundDetail_LineNum_Positive CHECK (LineNum &gt; 0),
+    CONSTRAINT CK_InboundDetail_Quantity_Positive CHECK (Quantity &gt; 0)
+    -- FKs to InboundHeader and Product intentionally omitted
+);
+
+CREATE TABLE dbo.OutboundHeader (
+    OutboundId   nvarchar(20) NOT NULL,
+    OutboundDate date NOT NULL CONSTRAINT DF_OutboundHeader_OutboundDate DEFAULT (CONVERT(date, SYSDATETIME())),
+    EmployeeId   nvarchar(20) NOT NULL,
+    CONSTRAINT PK_OutboundHeader PRIMARY KEY (OutboundId)
+    -- FK to Employee intentionally omitted
+);
+
+CREATE TABLE dbo.OutboundDetail (
+    OutboundId  nvarchar(20)  NOT NULL,
+    LineNum     smallint      NOT NULL,
+    ProductId   nvarchar(20)  NOT NULL,
+    ProductName nvarchar(100) NOT NULL,
+    Quantity    decimal(18,3) NOT NULL,
+    CONSTRAINT PK_OutboundDetail PRIMARY KEY (OutboundId, LineNum),
+    CONSTRAINT CK_OutboundDetail_LineNum_Positive CHECK (LineNum &gt; 0),
+    CONSTRAINT CK_OutboundDetail_Quantity_Positive CHECK (Quantity &gt; 0)
+    -- FKs to OutboundHeader and Product intentionally omitted
+);
+
+CREATE TABLE dbo.InventoryDailyClosing (
+    ClosingDate      date          NOT NULL,
+    ProductId        nvarchar(20)  NOT NULL,
+    OpeningQuantity  decimal(18,3) NOT NULL CONSTRAINT DF_IDC_Opening  DEFAULT (0),
+    InboundQuantity  decimal(18,3) NOT NULL CONSTRAINT DF_IDC_Inbound  DEFAULT (0),
+    OutboundQuantity decimal(18,3) NOT NULL CONSTRAINT DF_IDC_Outbound DEFAULT (0),
+    ClosingQuantity  decimal(18,3) NOT NULL CONSTRAINT DF_IDC_Closing  DEFAULT (0),
+    CONSTRAINT PK_InventoryDailyClosing PRIMARY KEY (ClosingDate, ProductId),
+    CONSTRAINT CK_InventoryDailyClosing_Balance
+        CHECK (ClosingQuantity = OpeningQuantity + InboundQuantity - OutboundQuantity)
+    -- FK to Product intentionally omitted
+);
+GO
+
+-- Copy data from biz00 (same server)
+INSERT INTO lalala.dbo.Employee              SELECT * FROM biz00.dbo.Employee;
+INSERT INTO lalala.dbo.Product                SELECT * FROM biz00.dbo.Product;
+INSERT INTO lalala.dbo.InboundHeader          SELECT * FROM biz00.dbo.InboundHeader;
+INSERT INTO lalala.dbo.InboundDetail          SELECT * FROM biz00.dbo.InboundDetail;
+INSERT INTO lalala.dbo.OutboundHeader         SELECT * FROM biz00.dbo.OutboundHeader;
+INSERT INTO lalala.dbo.OutboundDetail         SELECT * FROM biz00.dbo.OutboundDetail;
+INSERT INTO lalala.dbo.InventoryDailyClosing  SELECT * FROM biz00.dbo.InventoryDailyClosing;
+GO
+</code></pre>
+      </div>
+      <div class="script-card">
+        <div class="bar">
+          <div>
+            <div class="fname">02_add_foreign_keys.sql</div>
+            <div class="fdesc">The 7 FKs missing from lalala &mdash; inferred from schema, verified against biz00</div>
+          </div>
+          <div class="status info">Test-verified, not applied</div>
+        </div>
+        <pre><code>-- =====================================================================
+-- 02_add_foreign_keys.sql
+-- Adds the FOREIGN KEY constraints that [lalala] was created WITHOUT.
+--
+-- These 7 relationships were inferred by reading the table schema of
+-- biz00 (column names/types, which columns participate in each table&#x27;s
+-- PRIMARY KEY, and NOT NULL-ness) — cross-checked against biz00&#x27;s own
+-- FK constraints, which happen to already define exactly this same set:
+--
+--   Employee (1) ---&lt; InboundHeader   (EmployeeId)   non-identifying, mandatory
+--   Employee (1) ---&lt; OutboundHeader  (EmployeeId)   non-identifying, mandatory
+--   InboundHeader  (1) ---&lt; InboundDetail  (InboundId)   IDENTIFYING (part of child PK)
+--   OutboundHeader (1) ---&lt; OutboundDetail (OutboundId)  IDENTIFYING (part of child PK)
+--   Product (1) ---&lt; InboundDetail   (ProductId)  non-identifying, mandatory
+--   Product (1) ---&lt; OutboundDetail  (ProductId)  non-identifying, mandatory
+--   Product (1) ---&lt; InventoryDailyClosing (ProductId)  IDENTIFYING (part of child PK)
+-- =====================================================================
+
+USE lalala;
+GO
+
+ALTER TABLE dbo.InboundHeader WITH CHECK
+    ADD CONSTRAINT FK_InboundHeader_Employee
+    FOREIGN KEY (EmployeeId) REFERENCES dbo.Employee (EmployeeId);
+ALTER TABLE dbo.InboundHeader CHECK CONSTRAINT FK_InboundHeader_Employee;
+
+ALTER TABLE dbo.OutboundHeader WITH CHECK
+    ADD CONSTRAINT FK_OutboundHeader_Employee
+    FOREIGN KEY (EmployeeId) REFERENCES dbo.Employee (EmployeeId);
+ALTER TABLE dbo.OutboundHeader CHECK CONSTRAINT FK_OutboundHeader_Employee;
+
+ALTER TABLE dbo.InboundDetail WITH CHECK
+    ADD CONSTRAINT FK_InboundDetail_InboundHeader
+    FOREIGN KEY (InboundId) REFERENCES dbo.InboundHeader (InboundId);
+ALTER TABLE dbo.InboundDetail CHECK CONSTRAINT FK_InboundDetail_InboundHeader;
+
+ALTER TABLE dbo.InboundDetail WITH CHECK
+    ADD CONSTRAINT FK_InboundDetail_Product
+    FOREIGN KEY (ProductId) REFERENCES dbo.Product (ProductId);
+ALTER TABLE dbo.InboundDetail CHECK CONSTRAINT FK_InboundDetail_Product;
+
+ALTER TABLE dbo.OutboundDetail WITH CHECK
+    ADD CONSTRAINT FK_OutboundDetail_OutboundHeader
+    FOREIGN KEY (OutboundId) REFERENCES dbo.OutboundHeader (OutboundId);
+ALTER TABLE dbo.OutboundDetail CHECK CONSTRAINT FK_OutboundDetail_OutboundHeader;
+
+ALTER TABLE dbo.OutboundDetail WITH CHECK
+    ADD CONSTRAINT FK_OutboundDetail_Product
+    FOREIGN KEY (ProductId) REFERENCES dbo.Product (ProductId);
+ALTER TABLE dbo.OutboundDetail CHECK CONSTRAINT FK_OutboundDetail_Product;
+
+ALTER TABLE dbo.InventoryDailyClosing WITH CHECK
+    ADD CONSTRAINT FK_InventoryDailyClosing_Product
+    FOREIGN KEY (ProductId) REFERENCES dbo.Product (ProductId);
+ALTER TABLE dbo.InventoryDailyClosing CHECK CONSTRAINT FK_InventoryDailyClosing_Product;
+GO
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Generated by reading <code>sys.tables</code>, <code>sys.columns</code>, <code>sys.foreign_keys</code> and
+    <code>INFORMATION_SCHEMA.COLUMNS</code> on the live <code>biz00</code> database. The FK-add script was
+    test-applied inside a transaction against <code>lalala</code> and rolled back to confirm every
+    constraint attaches cleanly against the copied data, without altering lalala's current (FK-less) state.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var cards = [
+    { id: 'Employee', role: 'employee', roleLabel: 'MASTER', x: 30, y: 30,
+      cols: [['PK','EmployeeId','nvarchar(20)'], ['','EmployeeName','nvarchar(50)'], ['','Email','nvarchar(255) NULL']] },
+    { id: 'Product', role: 'product', roleLabel: 'MASTER', x: 950, y: 30,
+      cols: [['PK','ProductId','nvarchar(20)'], ['','ProductName','nvarchar(100)'], ['','StockBalance','decimal(18,3)']] },
+    { id: 'InboundHeader', role: 'inbound', roleLabel: 'INBOUND · HEADER', x: 30, y: 220,
+      cols: [['PK','InboundId','nvarchar(20)'], ['','InboundDate','date'], ['FK','EmployeeId','nvarchar(20)']] },
+    { id: 'OutboundHeader', role: 'outbound', roleLabel: 'OUTBOUND · HEADER', x: 30, y: 480,
+      cols: [['PK','OutboundId','nvarchar(20)'], ['','OutboundDate','date'], ['FK','EmployeeId','nvarchar(20)']] },
+    { id: 'InboundDetail', role: 'inbound', roleLabel: 'INBOUND · DETAIL', x: 490, y: 220,
+      cols: [['PK/FK','InboundId','nvarchar(20)'], ['PK','LineNum','smallint'], ['FK','ProductId','nvarchar(20)'], ['','ProductName','nvarchar(100)'], ['','Quantity','decimal(18,3)']] },
+    { id: 'OutboundDetail', role: 'outbound', roleLabel: 'OUTBOUND · DETAIL', x: 490, y: 480,
+      cols: [['PK/FK','OutboundId','nvarchar(20)'], ['PK','LineNum','smallint'], ['FK','ProductId','nvarchar(20)'], ['','ProductName','nvarchar(100)'], ['','Quantity','decimal(18,3)']] },
+    { id: 'InventoryDailyClosing', role: 'closing', roleLabel: 'SNAPSHOT', x: 950, y: 400,
+      cols: [['PK','ClosingDate','date'], ['PK/FK','ProductId','nvarchar(20)'], ['','OpeningQuantity','decimal(18,3)'], ['','InboundQuantity','decimal(18,3)'], ['','OutboundQuantity','decimal(18,3)'], ['','ClosingQuantity','decimal(18,3)']] }
+  ];
+
+  var relationships = [
+    { from: 'Employee', to: 'InboundHeader', identifying: false, route: 'left-channel', fromOffset: -14, channelOffset: -10 },
+    { from: 'Employee', to: 'OutboundHeader', identifying: false, route: 'left-channel', fromOffset: 14, channelOffset: -26 },
+    { from: 'InboundHeader', to: 'InboundDetail', identifying: true, route: 'straight' },
+    { from: 'OutboundHeader', to: 'OutboundDetail', identifying: true, route: 'straight' },
+    { from: 'InboundDetail', to: 'Product', identifying: false, route: 'mid-channel', entryOffset: -22, channelOffset: -18 },
+    { from: 'OutboundDetail', to: 'Product', identifying: false, route: 'mid-channel', entryOffset: 22, channelOffset: 18 },
+    { from: 'Product', to: 'InventoryDailyClosing', identifying: true, route: 'vertical' }
+  ];
+
+  var diagram = document.getElementById('diagram');
+  var svg = document.getElementById('connectors');
+
+  cards.forEach(function (c) {
+    var el = document.createElement('div');
+    el.className = 'card role-' + c.role;
+    el.id = 'card-' + c.id;
+    el.style.left = c.x + 'px';
+    el.style.top = c.y + 'px';
+
+    var head = document.createElement('div');
+    head.className = 'head';
+    head.innerHTML = '<span class="name">' + c.id + '</span><span class="role">' + c.roleLabel + '</span>';
+    el.appendChild(head);
+
+    var table = document.createElement('table');
+    c.cols.forEach(function (col) {
+      var tr = document.createElement('tr');
+      var flagClass = col[0] === 'FK' ? 'fk' : (col[0] ? 'pk' : '');
+      tr.innerHTML =
+        '<td class="col-flag ' + flagClass + '">' + col[0] + '</td>' +
+        '<td class="col-name' + (col[0].indexOf('PK') > -1 ? ' is-pk' : '') + '">' + col[1] + '</td>' +
+        '<td class="col-type">' + col[2] + '</td>';
+      table.appendChild(tr);
+    });
+    el.appendChild(table);
+    diagram.appendChild(el);
+  });
+
+  function rectOf(id) {
+    var el = document.getElementById('card-' + id);
+    return { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight,
+             right: el.offsetLeft + el.offsetWidth, bottom: el.offsetTop + el.offsetHeight,
+             midY: el.offsetTop + el.offsetHeight / 2, midX: el.offsetLeft + el.offsetWidth / 2 };
+  }
+
+  function draw() {
+    while (svg.lastChild && svg.lastChild.tagName !== 'defs') svg.removeChild(svg.lastChild);
+
+    var maxRight = 0, maxBottom = 0;
+    cards.forEach(function (c) {
+      var r = rectOf(c.id);
+      maxRight = Math.max(maxRight, r.right);
+      maxBottom = Math.max(maxBottom, r.bottom);
+    });
+    var W = maxRight + 30, H = maxBottom + 30;
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+    diagram.style.height = H + 'px';
+    diagram.style.width = W + 'px';
+
+    relationships.forEach(function (rel) {
+      var a = rectOf(rel.from), b = rectOf(rel.to);
+      var d, fromY, chX;
+
+      if (rel.route === 'straight') {
+        d = 'M' + a.right + ',' + a.midY + ' L' + b.left + ',' + b.midY;
+      } else if (rel.route === 'vertical') {
+        d = 'M' + a.midX + ',' + a.bottom + ' L' + b.midX + ',' + b.top;
+      } else if (rel.route === 'left-channel') {
+        fromY = a.midY + (rel.fromOffset || 0);
+        chX = a.left - 22 + (rel.channelOffset || 0);
+        d = 'M' + a.left + ',' + fromY + ' L' + chX + ',' + fromY + ' L' + chX + ',' + b.midY + ' L' + b.left + ',' + b.midY;
+      } else if (rel.route === 'mid-channel') {
+        var entryY = b.midY + (rel.entryOffset || 0);
+        chX = (a.right + b.left) / 2 + (rel.channelOffset || 0);
+        d = 'M' + a.right + ',' + a.midY + ' L' + chX + ',' + a.midY + ' L' + chX + ',' + entryY + ' L' + b.left + ',' + entryY;
+      }
+
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('class', 'conn-line ' + (rel.identifying ? 'identifying' : 'nonidentifying'));
+
+      // "many" end sits on whichever side is the child in the relationship; here it's
+      // always the `from` table for detail->master edges and `to` for master->detail edges.
+      var manyIsFrom = (rel.route === 'mid-channel');
+      path.setAttribute('marker-start', manyIsFrom ? 'url(#mkMany)' : 'url(#mkOne)');
+      path.setAttribute('marker-end', manyIsFrom ? 'url(#mkOne)' : 'url(#mkMany)');
+
+      svg.appendChild(path);
+    });
+  }
+
+  draw();
+  window.addEventListener('resize', function () {
+    clearTimeout(window.__erdT);
+    window.__erdT = setTimeout(draw, 120);
+  });
+})();
+</script>
