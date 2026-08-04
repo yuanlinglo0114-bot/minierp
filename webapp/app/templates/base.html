@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}MiniERP{% endblock %}</title>
+  <title>{% block title %}{{ brand_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand"><a href="{{ url_for('main.index') }}">MiniERP</a></div>
+      <div class="brand"><a href="{{ url_for('main.index') }}">{{ brand_name }}</a></div>
 
       <details class="menu-group" open>
         <summary>主數據</summary>

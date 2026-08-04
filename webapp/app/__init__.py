@@ -24,4 +24,8 @@ def create_app():
     app.register_blueprint(outbound_bp, url_prefix="/outbound")
     app.register_blueprint(reports_bp, url_prefix="/reports")
 
+    @app.context_processor
+    def inject_brand():
+        return {"brand_name": app.config["BRAND_NAME"]}
+
     return app

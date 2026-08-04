@@ -13,3 +13,4 @@ class Config:
     DB_USER = os.environ["DB_USER"]
     DB_PASSWORD = os.environ["DB_PASSWORD"]
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
+    BRAND_NAME = os.environ.get("BRAND_NAME", "甜死你阿嬤股份有限公司")

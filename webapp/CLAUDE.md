@@ -124,6 +124,19 @@ will work — routes query these views directly.
   existing closing row correctly shifts every later row's opening/closing
   balance, and deleting it restores the prior state exactly.
 
+## Branding
+
+The company name shown in the UI (sidebar + page titles) comes from
+`Config.BRAND_NAME` ([config.py](config.py), overridable via `BRAND_NAME` in
+`.env`), injected into every template as `brand_name` by a
+`context_processor` in [app/__init__.py](app/__init__.py). Change the brand
+by editing that one value — don't hardcode a name into templates again.
+`Product.ProductName` values were renamed to a Thai-candy catalog (see
+[sql/002_rename_products_to_candy.sql](sql/002_rename_products_to_candy.sql));
+`ProductId`, `StockBalance`, and every relationship are unchanged, and the
+denormalized `ProductName` copies in `InboundDetail`/`OutboundDetail` were
+updated to match so nothing shows a stale name.
+
 ## Menu structure
 
 Two levels, defined in [app/templates/base.html](app/templates/base.html):
