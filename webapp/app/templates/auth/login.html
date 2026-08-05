@@ -15,7 +15,10 @@
       <div style="display:flex; justify-content:center; margin-bottom:14px;">
         <span class="candy-icon" style="margin:0;"></span>
       </div>
-      <h1 style="font-size:20px; margin:0 0 18px; color:var(--candy-gold-dark);">{{ brand_name }}</h1>
+      <h1 style="font-size:20px; margin:0 0 8px; color:var(--candy-gold-dark);">{{ brand_name }}</h1>
+      <div class="brand-subtitle" style="color:var(--candy-gold-dark); margin-bottom:18px;">
+        <span>🍬</span><span>🍭</span><span>🍫</span><span>🍩</span><span>🧁</span>
+      </div>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}

@@ -12,9 +12,14 @@
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">
-        <span class="candy-icon"></span>
-        <a href="{{ url_for('main.index') }}">{{ brand_name }}</a>
+      <div class="brand-block">
+        <div class="brand">
+          <span class="candy-icon"></span>
+          <a href="{{ url_for('main.index') }}">{{ brand_name }}</a>
+        </div>
+        <div class="brand-subtitle">
+          <span>🍬</span><span>🍭</span><span>🍫</span><span>🍩</span><span>🧁</span>
+        </div>
       </div>
 
       <details class="menu-group" open>
