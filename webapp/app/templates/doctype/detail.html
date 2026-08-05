@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}單別明細 - {{ brand_name }}{% endblock %}
+{% block page_title %}單別明細：{{ doctype.DocTypeId }} - {{ doctype.DocTypeName }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('doctype.edit_view', doctype_id=doctype.DocTypeId) }}">編輯</a>
+  <form method="post" action="{{ url_for('doctype.delete_view', doctype_id=doctype.DocTypeId) }}"
+        onsubmit="return confirm('確定要刪除此單別嗎？');" style="display:inline;">
+    <button class="btn btn-danger" type="submit"
+      {% if details %}disabled title="已有入出單據，無法刪除"{% endif %}>刪除</button>
+  </form>
+  <a class="btn btn-secondary" href="{{ url_for('doctype.list_view') }}">返回列表</a>
+</div>
+
+<table>
+  <tr><th>單別代號</th><td>{{ doctype.DocTypeId }}</td></tr>
+  <tr><th>單別名稱</th><td>{{ doctype.DocTypeName }}</td></tr>
+  <tr><th>單據類型</th><td>{{ '入庫' if doctype.Category == 'Inbound' else '出庫' }}</td></tr>
+  <tr><th>方向</th><td>{{ '正常（+）' if doctype.SignMultiplier == 1 else '反向（-）' }}</td></tr>
+</table>
+
+<div class="detail-section">
+  <h2>入出單據（僅供查看）</h2>
+  {% if details %}
+  <table>
+    <thead><tr><th>類型</th><th>單據編號</th><th>日期</th></tr></thead>
+    <tbody>
+      {% for d in details %}
+      <tr>
+        <td>{{ '入庫' if d.DocType == 'Inbound' else '出庫' }}</td>
+        <td>{{ d.DocId }}</td>
+        <td>{{ d.DocDate }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">無入出單據紀錄</div>
+  {% endif %}
+</div>
+{% endblock %}

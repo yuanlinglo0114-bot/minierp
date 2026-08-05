@@ -32,20 +32,31 @@ def generate_product_id():
 
 
 def create_product(product_name, stock_balance):
+    """Creates the Product row and seeds its initial stock into ProductWarehouseStock
+    at the default warehouse (W001) so the two stay consistent from the start.
+    Further stock changes must go through Inbound/Outbound transactions -- see
+    update_product, which no longer accepts a stock_balance change."""
     product_id = generate_product_id()
-    db.execute(
-        "INSERT INTO Product (ProductId, ProductName, StockBalance) VALUES (%s, %s, %s)",
-        (product_id, product_name, stock_balance),
-    )
+    with db.transaction() as cur:
+        cur.execute(
+            "INSERT INTO Product (ProductId, ProductName, StockBalance) VALUES (%s, %s, %s)",
+            (product_id, product_name, stock_balance),
+        )
+        cur.execute(
+            "INSERT INTO ProductWarehouseStock (ProductId, WarehouseId, StockBalance) VALUES (%s, %s, %s)",
+            (product_id, "W001", stock_balance),
+        )
     return product_id
 
 
-def update_product(product_id, product_name, stock_balance):
+def update_product(product_id, product_name):
     db.execute(
-        "UPDATE Product SET ProductName = %s, StockBalance = %s WHERE ProductId = %s",
-        (product_name, stock_balance, product_id),
+        "UPDATE Product SET ProductName = %s WHERE ProductId = %s",
+        (product_name, product_id),
     )
 
 
 def delete_product(product_id):
-    db.execute("DELETE FROM Product WHERE ProductId = %s", (product_id,))
+    with db.transaction() as cur:
+        cur.execute("DELETE FROM ProductWarehouseStock WHERE ProductId = %s", (product_id,))
+        cur.execute("DELETE FROM Product WHERE ProductId = %s", (product_id,))

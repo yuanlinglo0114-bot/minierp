@@ -42,11 +42,10 @@ def edit_view(product_id):
         return redirect(url_for("product.list_view"))
     if request.method == "POST":
         name = request.form["product_name"].strip()
-        stock = request.form.get("stock_balance") or 0
         if not name:
             flash("物料名稱不可為空", "error")
             return render_template("product/form.html", product=product, form=request.form)
-        repo.update_product(product_id, name, stock)
+        repo.update_product(product_id, name)
         flash(f"已更新物料 {product_id}", "success")
         return redirect(url_for("product.detail_view", product_id=product_id))
     return render_template("product/form.html", product=product, form=None)

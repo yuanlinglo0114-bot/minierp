@@ -7,13 +7,16 @@
 </div>
 {% if headers %}
 <table>
-  <thead><tr><th>出庫單號</th><th>日期</th><th>經手員工</th><th>操作</th></tr></thead>
+  <thead><tr><th>出庫單號</th><th>日期</th><th>經手員工</th><th>客戶</th><th>單別</th><th>倉別</th><th>操作</th></tr></thead>
   <tbody>
     {% for h in headers %}
     <tr>
       <td>{{ h.OutboundId }}</td>
       <td>{{ h.OutboundDate }}</td>
       <td>{{ h.EmployeeId }} - {{ h.EmployeeName }}</td>
+      <td>{{ h.CustomerId }} - {{ h.CustomerName }}</td>
+      <td>{{ h.DocTypeId }} - {{ h.DocTypeName }}</td>
+      <td>{{ h.WarehouseId }} - {{ h.WarehouseName }}</td>
       <td class="actions">
         <a class="btn btn-sm" href="{{ url_for('outbound.edit_view', outbound_id=h.OutboundId) }}">編輯</a>
         <a class="btn btn-sm btn-secondary" href="{{ url_for('outbound.export_view', outbound_id=h.OutboundId) }}">匯出 Excel</a>

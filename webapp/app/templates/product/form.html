@@ -16,8 +16,13 @@
   </div>
   <div class="field">
     <label>庫存量</label>
+    {% if product %}
+    <input type="number" step="0.001" value="{{ product.StockBalance }}" disabled>
+    <small>庫存量僅可透過入庫/出庫單異動，無法直接編輯</small>
+    {% else %}
     <input type="number" step="0.001" name="stock_balance" required
-      value="{{ form.stock_balance if form else (product.StockBalance if product else 0) }}">
+      value="{{ form.stock_balance if form else 0 }}">
+    {% endif %}
   </div>
   <button class="btn" type="submit">儲存</button>
   <a class="btn btn-secondary" href="{{ url_for('product.list_view') }}">取消</a>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯供應商' if vendor else '新增供應商' }} - {{ brand_name }}{% endblock %}
+{% block page_title %}{{ '編輯供應商' if vendor else '新增供應商' }}{% endblock %}
+{% block content %}
+<form class="form-panel" method="post">
+  {% if vendor %}
+  <div class="field">
+    <label>供應商代號</label>
+    <input type="text" value="{{ vendor.VendorId }}" disabled>
+  </div>
+  {% endif %}
+  <div class="field">
+    <label>供應商名稱</label>
+    <input type="text" name="vendor_name" required
+      value="{{ form.vendor_name if form else (vendor.VendorName if vendor else '') }}">
+  </div>
+  <button class="btn" type="submit">儲存</button>
+  <a class="btn btn-secondary" href="{{ url_for('vendor.list_view') }}">取消</a>
+</form>
+{% endblock %}

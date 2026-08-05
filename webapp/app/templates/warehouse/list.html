@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}倉別管理 - {{ brand_name }}{% endblock %}
+{% block page_title %}倉別管理{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('warehouse.new_view') }}">+ 新增倉別</a>
+</div>
+{% if warehouses %}
+<table>
+  <thead>
+    <tr><th>倉別代號</th><th>倉別名稱</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    {% for w in warehouses %}
+    <tr>
+      <td>{{ w.WarehouseId }}</td>
+      <td>{{ w.WarehouseName }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('warehouse.detail_view', warehouse_id=w.WarehouseId) }}">檢視</a>
+        <a class="btn btn-sm" href="{{ url_for('warehouse.edit_view', warehouse_id=w.WarehouseId) }}">編輯</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">尚無倉別資料</div>
+{% endif %}
+{% endblock %}

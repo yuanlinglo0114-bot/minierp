@@ -83,9 +83,9 @@ helpers, and a `transaction()` context manager for multi-statement writes
 tabular, used by the two report pages).
 
 [app/id_gen.py](app/id_gen.py) generates the next sequential ID by scanning
-existing IDs sharing a prefix (`P`, `E`, or `IN20260101`/`OUT20260101` — see
-Schema below) and incrementing the max numeric suffix. IDs are business keys
-assigned by the app, not DB identities.
+existing IDs sharing a prefix (`P`, `E`, `D`, `W`, `C`, `V`, or
+`IN20260101`/`OUT20260101` — see Schema below) and incrementing the max
+numeric suffix. IDs are business keys assigned by the app, not DB identities.
 
 ## Schema
 
@@ -94,64 +94,105 @@ delete protection, is enforced entirely in the app layer):
 
 | Table | Columns | Notes |
 |---|---|---|
-| `Product` | ProductId (PK, `P###`), ProductName, StockBalance | StockBalance is live-maintained, see below |
-| `Employee` | EmployeeId (PK, `E###`), EmployeeName, Email (nullable) | |
-| `InboundHeader` | InboundId (PK, `INyyyymmdd###`), InboundDate, EmployeeId | |
+| `Product` | ProductId (PK, `P###`), ProductName, StockBalance | StockBalance is a live-maintained rollup across all warehouses, see below |
+| `Employee` | EmployeeId (PK, `E###`), EmployeeName, Email (nullable) | Internal handler on every document |
+| `DocType` | DocTypeId (PK, `D###`), DocTypeName, Category (`Inbound`/`Outbound`), SignMultiplier (`1`/`-1`) | 單別 sub-classification; SignMultiplier reverses a document's usual stock direction (e.g. a return) — see Business rules below |
+| `Warehouse` | WarehouseId (PK, `W###`), WarehouseName | 倉別; one warehouse per Inbound/Outbound document (header-level, not per-line) |
+| `Customer` | CustomerId (PK, `C###`), CustomerName | External trading partner on Outbound documents |
+| `Vendor` | VendorId (PK, `V###`), VendorName | External trading partner on Inbound documents |
+| `ProductWarehouseStock` | ProductId+WarehouseId (PK), StockBalance | Per-(product, warehouse) stock; `Product.StockBalance` is kept in sync as the sum across all warehouses — see `app/stock_adjustment.py`. Queried directly (not via `InventoryDailyClosing`) by 報表查詢 > 倉別庫存, the current-snapshot view of per-warehouse stock |
+| `InboundHeader` | InboundId (PK, `INyyyymmdd###`), InboundDate, EmployeeId, VendorId, DocTypeId, WarehouseId | |
 | `InboundDetail` | InboundId+LineNum (PK), ProductId, ProductName, Quantity | ProductName denormalized at write time |
-| `OutboundHeader` | OutboundId (PK, `OUTyyyymmdd###`), OutboundDate, EmployeeId | |
+| `OutboundHeader` | OutboundId (PK, `OUTyyyymmdd###`), OutboundDate, EmployeeId, CustomerId, DocTypeId, WarehouseId | |
 | `OutboundDetail` | OutboundId+LineNum (PK), ProductId, ProductName, Quantity | |
-| `InventoryDailyClosing` | ClosingDate+ProductId (PK), OpeningQuantity, InboundQuantity, OutboundQuantity, ClosingQuantity | Sparse: one row per (product, date) that actually had inbound/outbound activity — see maintenance rule below |
+| `InventoryDailyClosing` | ClosingDate+ProductId+WarehouseId (PK), OpeningQuantity, InboundQuantity, OutboundQuantity, ClosingQuantity | Sparse: one row per (product, warehouse, date) that actually had inbound/outbound activity — see maintenance rule below |
 
 Two views, created by [sql/001_create_views.sql](sql/001_create_views.sql)
-(they did not exist in the source DB — this migration must run once against
-any fresh database):
+and extended by [sql/005_update_inout_views.sql](sql/005_update_inout_views.sql)
+(this migration must run once against any fresh database):
 
 - **`v_inoutheader`** = `InboundHeader` UNION ALL `OutboundHeader`, with a
-  `DocType` discriminator and `DocId`/`DocDate` aliases. Serves two roles:
-  filtered by `EmployeeId` it's the 員工管理 drill-down; unfiltered it's the
-  報表查詢 > 入出單據 report.
+  `DocType` discriminator (the literal string `'Inbound'`/`'Outbound'` — not
+  to be confused with the `DocTypeId` sub-classification column, also
+  exposed on this view) and `DocId`/`DocDate` aliases, plus `WarehouseId`,
+  `VendorId`, `CustomerId` (NULL on the non-applicable side of the UNION).
+  Serves several roles: filtered by `EmployeeId`/`WarehouseId`/`VendorId`/
+  `CustomerId`/`DocTypeId` it's the respective master-data drill-down;
+  unfiltered it's the 報表查詢 > 入出單據 report.
 - **`v_inoutdetail`** = `InboundDetail` UNION ALL `OutboundDetail`, same
-  `DocType`/`DocId` shape. Filtered by `ProductId` it's the 物料管理
+  `DocType`/`DocId` shape, joined back to its own header to also expose
+  `DocTypeId`/`WarehouseId`. Filtered by `ProductId` it's the 物料管理
   drill-down; unfiltered it's 報表查詢 > 入出明細.
 
-If you regenerate the schema elsewhere, re-run the migration before the app
-will work — routes query these views directly.
+If you regenerate the schema elsewhere, re-run the migrations
+(`001`–`005` in `sql/`) before the app will work — routes query these views
+directly.
 
 ## Business rules worth knowing
 
-- **StockBalance is live-maintained, not a static seed value.** Verified
-  against the original data: for every product, StockBalance already equaled
-  (sum of inbound quantities − sum of outbound quantities). Creating an
-  inbound/outbound transaction adds/subtracts from `Product.StockBalance`
-  inside the same DB transaction as the header/detail insert (see
-  `app/inbound/repository.py` / `app/outbound/repository.py`). Editing a
-  transaction reverses the old lines' effect before applying the new ones;
-  deleting reverses it entirely. There is currently no floor check — an
-  outbound quantity larger than on-hand stock will drive StockBalance
-  negative rather than being rejected. Flag this to the user if it becomes a
-  real requirement.
+- **StockBalance has a real DB-level floor check, contrary to what this file
+  used to claim.** `sql/01_create_lalala.sql` (the actual live schema)
+  defines `CONSTRAINT CK_Product_StockBalance_NonNegative CHECK
+  (StockBalance >= 0)` — an update that would drive it negative is rejected
+  by the DB, not silently allowed. The new `ProductWarehouseStock` table
+  carries a matching CHECK for consistency. The real (still open) gap is
+  that nothing in the app catches the resulting pymssql exception, so a
+  violation currently surfaces as an unhandled 500 rather than a friendly
+  validation message — flag this to the user if it becomes a real
+  requirement.
+- **Stock is tracked per (Product, Warehouse) in `ProductWarehouseStock`,
+  with `Product.StockBalance` kept as a live-maintained rollup across all
+  warehouses.** [app/stock_adjustment.py](app/stock_adjustment.py)'s
+  `adjust_stock(cur, product_id, warehouse_id, delta)` upserts the
+  per-warehouse row and updates the rollup in the same call. `delta` is
+  `quantity * DocType.SignMultiplier` — **not** an unconditional `+` for
+  Inbound / `-` for Outbound. A DocType's `SignMultiplier` can reverse a
+  document's usual direction (e.g. a 退貨出庫 return-outbound has
+  `SignMultiplier = 1`, so it *increases* stock even though it's an
+  `OutboundHeader` row); the historical inbound-adds/outbound-subtracts
+  behavior falls out purely from the seeded `D001`(+1)/`D003`(-1) DocTypes,
+  not from code branching in `app/inbound/repository.py` /
+  `app/outbound/repository.py`.
+- **Product's manual `StockBalance` field is create-only.** New products can
+  specify an initial stock value (seeded into `ProductWarehouseStock` at the
+  default warehouse `W001` in the same transaction); editing an existing
+  product shows `StockBalance` read-only — all further changes must go
+  through Inbound/Outbound transactions to keep `ProductWarehouseStock` and
+  the rollup consistent.
 - **Delete protection on master data**: a Product can't be deleted while any
-  `v_inoutdetail` row references its ProductId; an Employee can't be deleted
-  while any `v_inoutheader` row references its EmployeeId. Enforced in
-  `routes.py` (`has_details()` check), not by the DB.
-- **`InventoryDailyClosing` is rebuilt from scratch per affected product on
-  every inbound/outbound write**, not incrementally patched. See
-  [app/inventory_closing.py](app/inventory_closing.py):
-  `recompute_for_product(cur, product_id)` deletes all existing rows for that
-  product and regenerates them in date order straight from
-  `InboundDetail`/`OutboundDetail` (joined to their headers for the date),
-  threading `OpeningQuantity`/`ClosingQuantity` forward as it goes. It's
-  called — with the same cursor, inside the same `db.transaction()` — from
-  every `create_*`/`update_*`/`delete_*` in `app/inbound/repository.py` and
-  `app/outbound/repository.py`, for every product touched by that write
-  (union of old and new product IDs on an edit).
+  `v_inoutdetail` row references its ProductId; an Employee/Warehouse/
+  Customer/Vendor/DocType can't be deleted while any `v_inoutheader` row
+  references it. Enforced in each module's `routes.py` (`has_details()`
+  check), not by the DB.
+- **`InventoryDailyClosing` is rebuilt from scratch per affected
+  (product, warehouse) pair on every inbound/outbound write**, not
+  incrementally patched. See [app/inventory_closing.py](app/inventory_closing.py):
+  `recompute_for_product_warehouse(cur, product_id, warehouse_id)` deletes
+  all existing rows for that pair and regenerates them in date order
+  straight from `InboundDetail`/`OutboundDetail` (joined to their headers
+  for the date **and** `DocType` for the sign), threading
+  `OpeningQuantity`/`ClosingQuantity` forward as it goes. It's called — with
+  the same cursor, inside the same `db.transaction()` — from every
+  `create_*`/`update_*`/`delete_*` in `app/inbound/repository.py` and
+  `app/outbound/repository.py`, for every `(product_id, warehouse_id)` pair
+  touched by that write (union of old and new pairs on an edit, since the
+  warehouse itself can change).
 
-  This exists specifically because **documents are routinely entered out of
-  date order** (a user backdates an inbound after later-dated ones already
-  exist). An incremental "append/patch the latest row" approach breaks the
-  moment a backdated entry lands before the current latest date, since every
-  later row's `OpeningQuantity` depends on the row before it. A full rebuild
-  from the transaction tables sidesteps that entirely — it's always correct
+  Each detail row's effective contribution is `Quantity *
+  DocType.SignMultiplier`, so the stored `InboundQuantity`/`OutboundQuantity`
+  columns are **signed net contributions**, not raw physical volumes — a
+  return-outbound document stores a *negative* `OutboundQuantity` for its
+  date, which is what makes `Opening - Outbound` correctly add the returned
+  stock back. This keeps the existing `CK_InventoryDailyClosing_Balance`
+  CHECK (`Closing = Opening + Inbound - Outbound`) valid unmodified.
+
+  The full-rebuild-not-incremental-patch design exists specifically because
+  **documents are routinely entered out of date order** (a user backdates an
+  inbound after later-dated ones already exist). An incremental
+  "append/patch the latest row" approach breaks the moment a backdated entry
+  lands before the current latest date, since every later row's
+  `OpeningQuantity` depends on the row before it. A full rebuild from the
+  transaction tables sidesteps that entirely — it's always correct
   regardless of entry order, and cheap at this table's scale. Verified
   end-to-end: inserting a transaction dated before a product's earliest
   existing closing row correctly shifts every later row's opening/closing
@@ -173,7 +214,10 @@ updated to match so nothing shows a stale name.
 ## Access control
 
 There is one shared site password (`Config.SITE_PASSWORD`, required in
-`.env` — no default, app won't start without it), not per-user accounts. See
+`.env` — no default, app won't start without it), not per-user accounts. The
+actual value for local/dev testing lives only in `.env` (gitignored) — check
+that file if you need to log in locally; it is intentionally never written
+here or in any other tracked file. See
 [app/auth/routes.py](app/auth/routes.py): `/login` checks the submitted
 password against `SITE_PASSWORD` with `hmac.compare_digest` (constant-time)
 and sets `session["authenticated"] = True`; `/logout` clears the session. A
@@ -190,15 +234,18 @@ It is not a real user system: don't build features assuming distinct users
 
 Two levels, defined in [app/templates/base.html](app/templates/base.html):
 
-- 主數據: 物料管理 (`/product`) · 員工管理 (`/employee`)
+- 主數據: 物料管理 (`/product`) · 員工管理 (`/employee`) · 單別管理 (`/doctype`) ·
+  倉別管理 (`/warehouse`) · 客戶管理 (`/customer`) · 供應商管理 (`/vendor`)
 - 交易數據: 入庫管理 (`/inbound`) · 出庫管理 (`/outbound`)
 - 報表查詢: 入出單據 (`/reports/inout-header`) · 入出明細 (`/reports/inout-detail`) ·
-  日結餘額表 (`/reports/inventory-closing`)
+  日結餘額表 (`/reports/inventory-closing`) · 倉別庫存 (`/reports/warehouse-stock`)
 
 ## Known gaps / explicitly out of scope
 
 - One shared password, no per-user accounts or permissions (see Access
   control above) — anyone who knows the password can do anything.
-- No negative-stock guard on outbound (see above).
+- The DB-level `CHECK (StockBalance >= 0)` floor (see Business rules above)
+  is not caught anywhere in the app, so exceeding on-hand stock currently
+  surfaces as an unhandled 500 rather than a friendly validation message.
 - Dev server only (`app.run(debug=True)`) locally — see the deployment
   section for the production entrypoint (gunicorn, debug off).

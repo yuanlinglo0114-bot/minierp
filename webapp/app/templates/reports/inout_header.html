@@ -29,16 +29,52 @@
     </select>
   </div>
   <div class="field">
+    <label>單別</label>
+    <select name="doc_type_id">
+      <option value="">全部</option>
+      {% for dt in doctypes %}
+      <option value="{{ dt.DocTypeId }}" {{ 'selected' if dt.DocTypeId == doc_type_id else '' }}>{{ dt.DocTypeId }} - {{ dt.DocTypeName }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>倉別</label>
+    <select name="warehouse_id">
+      <option value="">全部</option>
+      {% for w in warehouses %}
+      <option value="{{ w.WarehouseId }}" {{ 'selected' if w.WarehouseId == warehouse_id else '' }}>{{ w.WarehouseId }} - {{ w.WarehouseName }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>供應商</label>
+    <select name="vendor_id">
+      <option value="">全部</option>
+      {% for v in vendors %}
+      <option value="{{ v.VendorId }}" {{ 'selected' if v.VendorId == vendor_id else '' }}>{{ v.VendorId }} - {{ v.VendorName }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>客戶</label>
+    <select name="customer_id">
+      <option value="">全部</option>
+      {% for c in customers %}
+      <option value="{{ c.CustomerId }}" {{ 'selected' if c.CustomerId == customer_id else '' }}>{{ c.CustomerId }} - {{ c.CustomerName }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
     <button class="btn" type="submit">查詢</button>
   </div>
   <div class="field">
-    <a class="btn btn-secondary" href="{{ url_for('reports.inout_header_export', date_from=date_from, date_to=date_to, employee_id=employee_id, doc_type=doc_type) }}">匯出 Excel</a>
+    <a class="btn btn-secondary" href="{{ url_for('reports.inout_header_export', date_from=date_from, date_to=date_to, employee_id=employee_id, doc_type=doc_type, doc_type_id=doc_type_id, warehouse_id=warehouse_id, vendor_id=vendor_id, customer_id=customer_id) }}">匯出 Excel</a>
   </div>
 </form>
 
 {% if rows %}
 <table>
-  <thead><tr><th>類型</th><th>單據編號</th><th>日期</th><th>經手員工</th></tr></thead>
+  <thead><tr><th>類型</th><th>單據編號</th><th>日期</th><th>經手員工</th><th>單別</th><th>倉別</th><th>供應商</th><th>客戶</th></tr></thead>
   <tbody>
     {% for r in rows %}
     <tr>
@@ -46,6 +82,10 @@
       <td>{{ r.DocId }}</td>
       <td>{{ r.DocDate }}</td>
       <td>{{ r.EmployeeId }}</td>
+      <td>{{ r.DocTypeId }}</td>
+      <td>{{ r.WarehouseId }}</td>
+      <td>{{ r.VendorId or '' }}</td>
+      <td>{{ r.CustomerId or '' }}</td>
     </tr>
     {% endfor %}
   </tbody>

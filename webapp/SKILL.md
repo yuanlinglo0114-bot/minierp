@@ -17,7 +17,9 @@ python run.py   # http://127.0.0.1:5050, debug reloader on
 
 If venv doesn't exist yet: `python3 -m venv venv && source venv/bin/activate
 && pip install -r requirements.txt`. Credentials come from `.env` (copy from
-`.env.example`, never commit the real one).
+`.env.example`, never commit the real one). The login gate's `SITE_PASSWORD`
+value for local testing is in that same `.env` file — check there rather
+than asking, it's intentionally not written in any tracked file.
 
 ## Add a new master-data module (like Product/Employee)
 

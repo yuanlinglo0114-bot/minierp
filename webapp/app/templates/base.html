@@ -26,6 +26,10 @@
         <summary>主數據</summary>
         <a class="menu-item {{ 'active' if request.path.startswith('/product') }}" href="{{ url_for('product.list_view') }}">物料管理</a>
         <a class="menu-item {{ 'active' if request.path.startswith('/employee') }}" href="{{ url_for('employee.list_view') }}">員工管理</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/doctype') }}" href="{{ url_for('doctype.list_view') }}">單別管理</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/warehouse') }}" href="{{ url_for('warehouse.list_view') }}">倉別管理</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/customer') }}" href="{{ url_for('customer.list_view') }}">客戶管理</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/vendor') }}" href="{{ url_for('vendor.list_view') }}">供應商管理</a>
       </details>
 
       <details class="menu-group" open>
@@ -39,6 +43,7 @@
         <a class="menu-item {{ 'active' if request.path.startswith('/reports/inout-header') }}" href="{{ url_for('reports.inout_header') }}">入出單據</a>
         <a class="menu-item {{ 'active' if request.path.startswith('/reports/inout-detail') }}" href="{{ url_for('reports.inout_detail') }}">入出明細</a>
         <a class="menu-item {{ 'active' if request.path.startswith('/reports/inventory-closing') }}" href="{{ url_for('reports.inventory_closing') }}">日結餘額表</a>
+        <a class="menu-item {{ 'active' if request.path.startswith('/reports/warehouse-stock') }}" href="{{ url_for('reports.warehouse_stock') }}">倉別庫存</a>
       </details>
 
       <a class="menu-item" style="margin-top:16px;" href="{{ url_for('auth.logout') }}">登出</a>

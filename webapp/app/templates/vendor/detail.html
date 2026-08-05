@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}供應商明細 - {{ brand_name }}{% endblock %}
+{% block page_title %}供應商明細：{{ vendor.VendorId }} - {{ vendor.VendorName }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('vendor.edit_view', vendor_id=vendor.VendorId) }}">編輯</a>
+  <form method="post" action="{{ url_for('vendor.delete_view', vendor_id=vendor.VendorId) }}"
+        onsubmit="return confirm('確定要刪除此供應商嗎？');" style="display:inline;">
+    <button class="btn btn-danger" type="submit"
+      {% if details %}disabled title="已有入出單據，無法刪除"{% endif %}>刪除</button>
+  </form>
+  <a class="btn btn-secondary" href="{{ url_for('vendor.list_view') }}">返回列表</a>
+</div>
+
+<table>
+  <tr><th>供應商代號</th><td>{{ vendor.VendorId }}</td></tr>
+  <tr><th>供應商名稱</th><td>{{ vendor.VendorName }}</td></tr>
+</table>
+
+<div class="detail-section">
+  <h2>入出單據（僅供查看）</h2>
+  {% if details %}
+  <table>
+    <thead><tr><th>類型</th><th>單據編號</th><th>日期</th></tr></thead>
+    <tbody>
+      {% for d in details %}
+      <tr>
+        <td>{{ '入庫' if d.DocType == 'Inbound' else '出庫' }}</td>
+        <td>{{ d.DocId }}</td>
+        <td>{{ d.DocDate }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">無入出單據紀錄</div>
+  {% endif %}
+</div>
+{% endblock %}

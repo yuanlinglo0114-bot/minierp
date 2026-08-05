@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}單別管理 - {{ brand_name }}{% endblock %}
+{% block page_title %}單別管理{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('doctype.new_view') }}">+ 新增單別</a>
+</div>
+{% if doctypes %}
+<table>
+  <thead>
+    <tr><th>單別代號</th><th>單別名稱</th><th>單據類型</th><th>方向</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    {% for d in doctypes %}
+    <tr>
+      <td>{{ d.DocTypeId }}</td>
+      <td>{{ d.DocTypeName }}</td>
+      <td>{{ '入庫' if d.Category == 'Inbound' else '出庫' }}</td>
+      <td>{{ '正常（+）' if d.SignMultiplier == 1 else '反向（-）' }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('doctype.detail_view', doctype_id=d.DocTypeId) }}">檢視</a>
+        <a class="btn btn-sm" href="{{ url_for('doctype.edit_view', doctype_id=d.DocTypeId) }}">編輯</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">尚無單別資料</div>
+{% endif %}
+{% endblock %}

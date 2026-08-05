@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯客戶' if customer else '新增客戶' }} - {{ brand_name }}{% endblock %}
+{% block page_title %}{{ '編輯客戶' if customer else '新增客戶' }}{% endblock %}
+{% block content %}
+<form class="form-panel" method="post">
+  {% if customer %}
+  <div class="field">
+    <label>客戶代號</label>
+    <input type="text" value="{{ customer.CustomerId }}" disabled>
+  </div>
+  {% endif %}
+  <div class="field">
+    <label>客戶名稱</label>
+    <input type="text" name="customer_name" required
+      value="{{ form.customer_name if form else (customer.CustomerName if customer else '') }}">
+  </div>
+  <button class="btn" type="submit">儲存</button>
+  <a class="btn btn-secondary" href="{{ url_for('customer.list_view') }}">取消</a>
+</form>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯單別' if doctype else '新增單別' }} - {{ brand_name }}{% endblock %}
+{% block page_title %}{{ '編輯單別' if doctype else '新增單別' }}{% endblock %}
+{% block content %}
+<form class="form-panel" method="post">
+  {% if doctype %}
+  <div class="field">
+    <label>單別代號</label>
+    <input type="text" value="{{ doctype.DocTypeId }}" disabled>
+  </div>
+  {% endif %}
+  <div class="field">
+    <label>單別名稱</label>
+    <input type="text" name="doctype_name" required
+      value="{{ form.doctype_name if form else (doctype.DocTypeName if doctype else '') }}">
+  </div>
+  <div class="field">
+    <label>單據類型</label>
+    <select name="category" required>
+      {% set current_category = form.category if form else (doctype.Category if doctype else '') %}
+      <option value="">請選擇</option>
+      <option value="Inbound" {{ 'selected' if current_category == 'Inbound' else '' }}>入庫</option>
+      <option value="Outbound" {{ 'selected' if current_category == 'Outbound' else '' }}>出庫</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>方向</label>
+    <select name="sign_multiplier" required>
+      {% set current_sign = form.sign_multiplier if form else (doctype.SignMultiplier if doctype else none) %}
+      <option value="">請選擇</option>
+      <option value="1" {{ 'selected' if current_sign|string == '1' else '' }}>正常（依單據類型預設方向增減庫存）</option>
+      <option value="-1" {{ 'selected' if current_sign|string == '-1' else '' }}>反向（與單據類型預設方向相反，例如退貨）</option>
+    </select>
+  </div>
+  <button class="btn" type="submit">儲存</button>
+  <a class="btn btn-secondary" href="{{ url_for('doctype.list_view') }}">取消</a>
+</form>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}供應商管理 - {{ brand_name }}{% endblock %}
+{% block page_title %}供應商管理{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="btn" href="{{ url_for('vendor.new_view') }}">+ 新增供應商</a>
+</div>
+{% if vendors %}
+<table>
+  <thead>
+    <tr><th>供應商代號</th><th>供應商名稱</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    {% for v in vendors %}
+    <tr>
+      <td>{{ v.VendorId }}</td>
+      <td>{{ v.VendorName }}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-secondary" href="{{ url_for('vendor.detail_view', vendor_id=v.VendorId) }}">檢視</a>
+        <a class="btn btn-sm" href="{{ url_for('vendor.edit_view', vendor_id=v.VendorId) }}">編輯</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">尚無供應商資料</div>
+{% endif %}
+{% endblock %}

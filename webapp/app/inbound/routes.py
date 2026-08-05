@@ -1,10 +1,13 @@
 from flask import flash, redirect, render_template, request, send_file, url_for
 
 from app import excel_export
+from app.doctype import repository as doctype_repo
 from app.employee import repository as employee_repo
 from app.inbound import bp
 from app.inbound import repository as repo
 from app.product import repository as product_repo
+from app.vendor import repository as vendor_repo
+from app.warehouse import repository as warehouse_repo
 
 
 def _parse_lines(form):
@@ -18,6 +21,16 @@ def _parse_lines(form):
     return lines
 
 
+def _lookups():
+    return {
+        "employees": employee_repo.list_employees(),
+        "products": product_repo.list_products(),
+        "vendors": vendor_repo.list_vendors(),
+        "doctypes": doctype_repo.list_doctypes(category="Inbound"),
+        "warehouses": warehouse_repo.list_warehouses(),
+    }
+
+
 @bp.route("/")
 def list_view():
     headers = repo.list_headers()
@@ -29,29 +42,45 @@ def new_view():
     if request.method == "POST":
         inbound_date = request.form["inbound_date"]
         employee_id = request.form["employee_id"]
+        vendor_id = request.form["vendor_id"]
+        doc_type_id = request.form["doc_type_id"]
+        warehouse_id = request.form["warehouse_id"]
         lines = _parse_lines(request.form)
-        if not employee_id or not lines:
-            flash("請選擇經手員工並至少填寫一行明細", "error")
+        doctype_row = doctype_repo.get_doctype(doc_type_id) if doc_type_id else None
+        if (
+            not employee_id
+            or not vendor_id
+            or not doc_type_id
+            or not warehouse_id
+            or not lines
+            or doctype_row is None
+            or doctype_row["Category"] != "Inbound"
+        ):
+            flash("請選擇經手員工、供應商、單別、倉別並至少填寫一行明細", "error")
             return render_template(
                 "inbound/form.html",
                 header=None,
                 lines=[{"ProductId": p, "Quantity": q} for p, q in lines],
-                employees=employee_repo.list_employees(),
-                products=product_repo.list_products(),
+                **_lookups(),
                 form_date=inbound_date,
                 form_employee_id=employee_id,
+                form_vendor_id=vendor_id,
+                form_doc_type_id=doc_type_id,
+                form_warehouse_id=warehouse_id,
             )
-        inbound_id = repo.create_inbound(inbound_date, employee_id, lines)
+        inbound_id = repo.create_inbound(inbound_date, employee_id, vendor_id, doc_type_id, warehouse_id, lines)
         flash(f"已新增入庫單 {inbound_id}", "success")
         return redirect(url_for("inbound.list_view"))
     return render_template(
         "inbound/form.html",
         header=None,
         lines=[],
-        employees=employee_repo.list_employees(),
-        products=product_repo.list_products(),
+        **_lookups(),
         form_date="",
         form_employee_id="",
+        form_vendor_id="",
+        form_doc_type_id="",
+        form_warehouse_id="",
     )
 
 
@@ -65,19 +94,33 @@ def edit_view(inbound_id):
     if request.method == "POST":
         inbound_date = request.form["inbound_date"]
         employee_id = request.form["employee_id"]
+        vendor_id = request.form["vendor_id"]
+        doc_type_id = request.form["doc_type_id"]
+        warehouse_id = request.form["warehouse_id"]
         lines = _parse_lines(request.form)
-        if not employee_id or not lines:
-            flash("請選擇經手員工並至少填寫一行明細", "error")
+        doctype_row = doctype_repo.get_doctype(doc_type_id) if doc_type_id else None
+        if (
+            not employee_id
+            or not vendor_id
+            or not doc_type_id
+            or not warehouse_id
+            or not lines
+            or doctype_row is None
+            or doctype_row["Category"] != "Inbound"
+        ):
+            flash("請選擇經手員工、供應商、單別、倉別並至少填寫一行明細", "error")
             return render_template(
                 "inbound/form.html",
                 header=header,
                 lines=[{"ProductId": p, "Quantity": q} for p, q in lines],
-                employees=employee_repo.list_employees(),
-                products=product_repo.list_products(),
+                **_lookups(),
                 form_date=inbound_date,
                 form_employee_id=employee_id,
+                form_vendor_id=vendor_id,
+                form_doc_type_id=doc_type_id,
+                form_warehouse_id=warehouse_id,
             )
-        repo.update_inbound(inbound_id, inbound_date, employee_id, lines)
+        repo.update_inbound(inbound_id, inbound_date, employee_id, vendor_id, doc_type_id, warehouse_id, lines)
         flash(f"已更新入庫單 {inbound_id}", "success")
         return redirect(url_for("inbound.list_view"))
 
@@ -86,10 +129,12 @@ def edit_view(inbound_id):
         "inbound/form.html",
         header=header,
         lines=lines,
-        employees=employee_repo.list_employees(),
-        products=product_repo.list_products(),
+        **_lookups(),
         form_date=str(header["InboundDate"]),
         form_employee_id=header["EmployeeId"],
+        form_vendor_id=header["VendorId"],
+        form_doc_type_id=header["DocTypeId"],
+        form_warehouse_id=header["WarehouseId"],
     )
 
 
@@ -116,6 +161,10 @@ def export_view(inbound_id):
         doc_id=header["InboundId"],
         doc_date=header["InboundDate"],
         employee_label=f"{header['EmployeeId']} - {header['EmployeeName']}",
+        partner_field_label="供應商",
+        partner_label=f"{header['VendorId']} - {header['VendorName']}",
+        doctype_label=f"{header['DocTypeId']} - {header['DocTypeName']}",
+        warehouse_label=f"{header['WarehouseId']} - {header['WarehouseName']}",
         lines=lines,
     )
     return send_file(

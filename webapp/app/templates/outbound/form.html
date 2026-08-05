@@ -22,6 +22,33 @@
       {% endfor %}
     </select>
   </div>
+  <div class="field">
+    <label>客戶</label>
+    <select name="customer_id" required>
+      <option value="">請選擇</option>
+      {% for c in customers %}
+      <option value="{{ c.CustomerId }}" {{ 'selected' if c.CustomerId == form_customer_id else '' }}>{{ c.CustomerId }} - {{ c.CustomerName }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>單別</label>
+    <select name="doc_type_id" required>
+      <option value="">請選擇</option>
+      {% for dt in doctypes %}
+      <option value="{{ dt.DocTypeId }}" {{ 'selected' if dt.DocTypeId == form_doc_type_id else '' }}>{{ dt.DocTypeId }} - {{ dt.DocTypeName }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label>倉別</label>
+    <select name="warehouse_id" required>
+      <option value="">請選擇</option>
+      {% for w in warehouses %}
+      <option value="{{ w.WarehouseId }}" {{ 'selected' if w.WarehouseId == form_warehouse_id else '' }}>{{ w.WarehouseId }} - {{ w.WarehouseName }}</option>
+      {% endfor %}
+    </select>
+  </div>
 
   <div class="detail-section">
     <h2>明細行</h2>

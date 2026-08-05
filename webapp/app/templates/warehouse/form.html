@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ '編輯倉別' if warehouse else '新增倉別' }} - {{ brand_name }}{% endblock %}
+{% block page_title %}{{ '編輯倉別' if warehouse else '新增倉別' }}{% endblock %}
+{% block content %}
+<form class="form-panel" method="post">
+  {% if warehouse %}
+  <div class="field">
+    <label>倉別代號</label>
+    <input type="text" value="{{ warehouse.WarehouseId }}" disabled>
+  </div>
+  {% endif %}
+  <div class="field">
+    <label>倉別名稱</label>
+    <input type="text" name="warehouse_name" required
+      value="{{ form.warehouse_name if form else (warehouse.WarehouseName if warehouse else '') }}">
+  </div>
+  <button class="btn" type="submit">儲存</button>
+  <a class="btn btn-secondary" href="{{ url_for('warehouse.list_view') }}">取消</a>
+</form>
+{% endblock %}

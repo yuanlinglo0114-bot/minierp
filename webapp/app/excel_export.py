@@ -17,7 +17,8 @@ def _autosize(ws):
         ws.column_dimensions[col_letter].width = max(10, length + 2)
 
 
-def export_document(title, doc_id, doc_date, employee_label, lines):
+def export_document(title, doc_id, doc_date, employee_label, partner_field_label, partner_label,
+                     doctype_label, warehouse_label, lines):
     """Build a single document (voucher-style) workbook: title + header fields + line table.
 
     `lines` is a list of dicts with keys LineNum, ProductId, ProductName, Quantity.
@@ -41,8 +42,17 @@ def export_document(title, doc_id, doc_date, employee_label, lines):
     ws["A5"] = "經手員工"
     ws["A5"].font = LABEL_FONT
     ws["B5"] = employee_label
+    ws["A6"] = partner_field_label
+    ws["A6"].font = LABEL_FONT
+    ws["B6"] = partner_label
+    ws["A7"] = "單別"
+    ws["A7"].font = LABEL_FONT
+    ws["B7"] = doctype_label
+    ws["A8"] = "倉別"
+    ws["A8"].font = LABEL_FONT
+    ws["B8"] = warehouse_label
 
-    header_row = 7
+    header_row = 10
     columns = ["行號", "物料代號", "物料名稱", "數量"]
     for col_idx, col_name in enumerate(columns, start=1):
         cell = ws.cell(row=header_row, column=col_idx, value=col_name)
